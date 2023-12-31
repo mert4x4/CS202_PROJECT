@@ -1,5 +1,6 @@
 import javax.swing.*;
-import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class WelcomeWindow {
     JFrame window;
@@ -12,28 +13,50 @@ public class WelcomeWindow {
 
     public void createWindow() {
         window = new JFrame();
-        window.setVisible(true);
+
         window.setSize(640, 480);
 
         usernameLabel = new JLabel("Username:");
         usernameLabel.setBounds(50, 50, 80, 30);
+        usernameLabel.setVisible(true);
 
         usernameField = new JTextField();
         usernameField.setBounds(150, 50, 220, 30);
+        usernameField.setVisible(true);
 
         passwordLabel = new JLabel("Password:");
         passwordLabel.setBounds(50, 100, 80, 30);
+        passwordLabel.setVisible(true);
 
         passwordField = new JPasswordField();
         passwordField.setBounds(150, 100, 220, 30);
+        passwordField.setVisible(true);
 
         loginButton = new JButton("Login");
         loginButton.setBounds(150, 150, 100, 40);
+        loginButton.setVisible(true);
+
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataHandler handler = new DataHandler();
+                try {
+                    int userId = handler.login(usernameField.getText(), passwordField.getText());
+                    System.out.println(userId);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(window, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+
 
         registerButton = new JButton("Register");
         registerButton.setBounds(270, 150, 100, 40);
+        registerButton.setVisible(true);
 
         window.setLayout(null);
+
 
         window.add(usernameLabel);
         window.add(usernameField);
@@ -41,6 +64,10 @@ public class WelcomeWindow {
         window.add(passwordField);
         window.add(loginButton);
         window.add(registerButton);
+
+        window.setVisible(true);
+
+        window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
 }
