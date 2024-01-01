@@ -5,7 +5,5 @@ public class Main {
 
     WelcomeWindow welcomeWindow = new WelcomeWindow();
     welcomeWindow.createWindow();
-
-
     }
 }

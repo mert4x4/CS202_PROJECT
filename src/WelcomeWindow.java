@@ -43,6 +43,11 @@ public class WelcomeWindow {
                 try {
                     int userId = handler.login(usernameField.getText(), passwordField.getText());
                     System.out.println(userId);
+                    window.dispose();
+                    if(handler.getUserTypeFromId(userId).equals("Patient")){
+                        DetailedWindowPatient detailedWindowPatient = new DetailedWindowPatient();
+                        detailedWindowPatient.createWindow(userId);
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(window, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -54,6 +59,23 @@ public class WelcomeWindow {
         registerButton = new JButton("Register");
         registerButton.setBounds(270, 150, 100, 40);
         registerButton.setVisible(true);
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataHandler handler = new DataHandler();
+                try {
+                    handler.register(usernameField.getText(),passwordField.getText(),"Patient"); //paswordları hashlemeyi unutmayak
+                    int userId = handler.login(usernameField.getText(), passwordField.getText());
+                    System.out.println(userId);
+                    window.dispose();
+                    DetailedWindowPatient detailedWindowPatient = new DetailedWindowPatient();
+                    detailedWindowPatient.createWindow(userId);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(window, ex.getMessage(), "Register Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
 
         window.setLayout(null);
 
