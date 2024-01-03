@@ -151,7 +151,7 @@ public class DataHandler {
         Connection connection = dbConnection.getConnection();
 
         if (connection != null) {
-            String sql = "CALL get_available_doctors_by_dept__(?)";
+            String sql = "CALL get_available_doctors_by_dept(?)";
 
             try (CallableStatement callableStatement = connection.prepareCall(sql)) {
                 callableStatement.setString(1, departmentName);
@@ -185,7 +185,7 @@ public class DataHandler {
         Connection connection = dbConnection.getConnection();
 
         if (connection != null) {
-            String sql = "CALL get_doctors_available_between_dayXY__(?,?)";
+            String sql = "CALL get_doctors_available_between_dayXY(?,?)";
 
             try (CallableStatement callableStatement = connection.prepareCall(sql)) {
                 callableStatement.setDate(1, startDate);
@@ -226,7 +226,7 @@ public class DataHandler {
         Connection connection = dbConnection.getConnection();
 
         if (connection != null) {
-            String sql = "CALL doctors_available_AtoB_XtoY_____(?,?,?,?)";
+            String sql = "CALL doctors_available_AtoB_XtoY(?,?,?,?)";
 
             try (CallableStatement callableStatement = connection.prepareCall(sql)) {
                 callableStatement.setDate(1, startDate);
@@ -262,6 +262,96 @@ public class DataHandler {
 
         return appointments;
     }
+
+
+    public ArrayList<AppointmentInfo> getPatientAppointments(int patientID) {
+        ArrayList<AppointmentInfo> appointments = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "CALL get_appointment_by_userID(?)";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, patientID);
+
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    AppointmentInfo appointment = new AppointmentInfo();
+                    appointment.doctorID = resultSet.getInt("doctorID");
+                    appointment.slotID = resultSet.getInt("slotID");
+                    appointment.startTime = resultSet.getTime("start_time");
+                    appointment.endTime = resultSet.getTime("end_time");
+                    appointment.day = resultSet.getDate("slot_day");
+                    appointment.available = resultSet.getBoolean("available");
+                    appointment.appointmentID = resultSet.getInt("appointmentID");
+
+                    appointments.add(appointment);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return appointments;
+    }
+
+    public void makeAppointment(int patientID, int doctorID, int slotID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            // Use a CallableStatement to call the stored procedure
+            String sql = "{CALL MakeAppointment(?, ?, ?)}";
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, doctorID);
+                callableStatement.setInt(2, slotID);
+                callableStatement.setInt(3, patientID);
+
+                // Execute the stored procedure
+                callableStatement.execute();
+
+                // You can also retrieve any OUT parameters or result sets here if needed
+            } catch (SQLException e) {
+                // Handle SQL exceptions
+                throw new Exception("Error making appointment: " + e.getMessage());
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void cancelAppointment(int appointmentID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            // Use a CallableStatement to call the stored procedure
+            String sql = "{CALL CancelAppointment(?)}";
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, appointmentID);
+                // Execute the stored procedure
+                callableStatement.execute();
+            } catch (SQLException e) {
+                // Handle SQL exceptions
+                throw new Exception("Error making appointment: " + e.getMessage());
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
 
 
 

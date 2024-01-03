@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -9,24 +10,27 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class DetailedWindowPatient {
-    JFrame window;
-    JLabel infoLabel;
-    JLabel expertiseLabel;
-    JLabel startDateLabel;
-    JLabel endDateLabel;
-    JLabel startTimeLabel;
-    JLabel endTimeLabel;
-    JComboBox<String> expertiseComboBox;
-    JSpinner startDateSpinner;
-    JSpinner endDateSpinner;
-    JFormattedTextField startTimeField;
-    JFormattedTextField endTimeField;
-    JButton printButton;
-    JList<String> arrayListDisplay;
+    String lastAction = ""; //expertise,day,time
 
-    int userID;
+    private JFrame window;
+    private JLabel infoLabel;
+    private JLabel expertiseLabel;
+    private JLabel startDateLabel;
+    private JLabel endDateLabel;
+    private JLabel startTimeLabel;
+    private JLabel endTimeLabel;
+    private JComboBox<String> expertiseComboBox;
+    private JSpinner startDateSpinner;
+    private JSpinner endDateSpinner;
+    private JFormattedTextField startTimeField;
+    private JFormattedTextField endTimeField;
+    private JList<String> arrayListDisplay;
+    private JButton cancelButton;
 
-    DataHandler handler;
+    private int userID;
+    private DataHandler handler;
+
+    private ArrayList<AppointmentInfo> currentAppointmentInfo;
 
     public DetailedWindowPatient() {
         handler = new DataHandler();
@@ -36,7 +40,7 @@ public class DetailedWindowPatient {
         this.userID = userID;
 
         window = new JFrame();
-        window.setSize(640, 480);
+        window.setSize(800, 500);
 
         try {
             infoLabel = new JLabel("Account Type: " + handler.getUserTypeFromId(userID) + " AccountID: " + userID);
@@ -101,44 +105,34 @@ public class DetailedWindowPatient {
         endTimeField.setBounds(390, 200, 150, 30);
         endTimeField.setVisible(true);
 
-        printButton = new JButton("Print Selected Data");
-        printButton.setBounds(160, 250, 150, 30);
-        printButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                printSelectedData();
-            }
-        });
-
         JButton searchByExpertiseButton = new JButton("Search by Expertise");
-        searchByExpertiseButton.setBounds(160, 300, 150, 30);
-        searchByExpertiseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchByExpertise();
-            }
-        });
+        searchByExpertiseButton.setBounds(50, 250, 150, 30);
+        searchByExpertiseButton.addActionListener(e -> searchByExpertise());
 
         JButton searchForDateButton = new JButton("Search for Date");
-        searchForDateButton.setBounds(320, 250, 150, 30);
-        searchForDateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchForDate();
-            }
-        });
+        searchForDateButton.setBounds(210, 250, 150, 30);
+        searchForDateButton.addActionListener(e -> searchForDate());
 
         JButton searchForDateTimeButton = new JButton("Search for Date and Time");
-        searchForDateTimeButton.setBounds(320, 300, 150, 30);
-        searchForDateTimeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchForDateTime();
-            }
-        });
+        searchForDateTimeButton.setBounds(370, 250, 180, 30);
+        searchForDateTimeButton.addActionListener(e -> searchForDateTime());
+
+        JButton listAppointmentsButton = new JButton("List Appointments");
+        listAppointmentsButton.setBounds(560, 250, 150, 30);
+        listAppointmentsButton.addActionListener(e -> listAppointments());
+
+        JButton makeAppointmentButton = new JButton("Make Appointment");
+        makeAppointmentButton.setBounds(560, 300, 150, 30);
+        makeAppointmentButton.addActionListener(e -> makeAppointment());
+
+        cancelButton = new JButton("Cancel Appointment");
+        cancelButton.setBounds(720, 300, 150, 30);
+        cancelButton.addActionListener(e -> cancelAppointment());
+        cancelButton.setVisible(false);
+
 
         arrayListDisplay = new JList<>();
-        arrayListDisplay.setBounds(50, 350, 260, 150);
+        arrayListDisplay.setBounds(50, 330, 660, 300);
         arrayListDisplay.setVisible(true);
 
         window.setLayout(null);
@@ -153,82 +147,60 @@ public class DetailedWindowPatient {
         window.add(startTimeField);
         window.add(endTimeLabel);
         window.add(endTimeField);
-        window.add(printButton);
         window.add(searchByExpertiseButton);
         window.add(searchForDateButton);
         window.add(searchForDateTimeButton);
+        window.add(listAppointmentsButton);
+        window.add(makeAppointmentButton);
         window.add(arrayListDisplay);
+        window.add(cancelButton);
         window.setVisible(true);
 
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         updateExpertiseComboBox();
-    }
-
-    private void printSelectedData() {
-        String selectedExpertise = (String) expertiseComboBox.getSelectedItem();
-        Date selectedStartDate = (Date) startDateSpinner.getValue();
-        Date selectedEndDate = (Date) endDateSpinner.getValue();
-
-        java.sql.Date sqlStartDate = new java.sql.Date(selectedStartDate.getTime());
-        java.sql.Date sqlEndDate = new java.sql.Date(selectedEndDate.getTime());
-
-        String formattedStartDate = new SimpleDateFormat("dd-MMM-yyyy").format(selectedStartDate);
-        String formattedEndDate = new SimpleDateFormat("dd-MMM-yyyy").format(selectedEndDate);
-        String selectedStartTime = startTimeField.getText();
-        String selectedEndTime = endTimeField.getText();
-
-        try {
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-
-            // Convert selectedStartTime and selectedEndTime to java.util.Date
-            Date parsedStartTime = timeFormat.parse(selectedStartTime);
-            Date parsedEndTime = timeFormat.parse(selectedEndTime);
-
-            // Convert to java.sql.Time
-            java.sql.Time sqlStartTime = new java.sql.Time(parsedStartTime.getTime());
-            java.sql.Time sqlEndTime = new java.sql.Time(parsedEndTime.getTime());
-
-            System.out.println("Selected Expertise: " + selectedExpertise);
-            System.out.println("Start Date: " + formattedStartDate);
-            System.out.println("End Date: " + formattedEndDate);
-            System.out.println("Start Time: " + sqlStartTime);
-            System.out.println("End Time: " + sqlEndTime);
-
-            ArrayList<String> arrayList = new ArrayList<>();
-            arrayList.add("Expertise: " + selectedExpertise);
-            arrayList.add("Start Date: " + formattedStartDate);
-            arrayList.add("End Date: " + formattedEndDate);
-            arrayList.add("Start Time: " + sqlStartTime);
-            arrayList.add("End Time: " + sqlEndTime);
-
-            for (AppointmentInfo i : handler.getDoctorsAvailableBetweenTime(
-                    sqlStartDate,
-                    sqlEndDate,
-                    sqlStartTime,
-                    sqlEndTime
-            )) {
-                System.out.println(i.getInfoText());
-            }
-
-            arrayListDisplay.setListData(arrayList.toArray(new String[0]));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        handler.getPatientAppointments(userID);
     }
 
     private void searchByExpertise() {
-        // Implement search by expertise logic here
-        // Use expertiseComboBox.getSelectedItem() to get the selected expertise
-        // Update arrayListDisplay accordingly
+        lastAction = "expertise";
+        currentAppointmentInfo = new ArrayList<AppointmentInfo>();
+        String selectedExpertise = (String) expertiseComboBox.getSelectedItem();
+        ArrayList<AppointmentInfo> appointmentInfoList = new ArrayList<>();
+
+        for (AppointmentInfo i : handler.getDoctorIdsByDepartment(selectedExpertise)) {
+            appointmentInfoList.add(i);
+            currentAppointmentInfo.add(i);
+        }
+
+        displayAppointments(appointmentInfoList);
+        cancelButton.setVisible(false);
     }
 
     private void searchForDate() {
-        // Implement search for date logic here
-        // Use startDateSpinner.getValue() to get the selected start date
-        // Update arrayListDisplay accordingly
+        lastAction = "day";
+        currentAppointmentInfo = new ArrayList<AppointmentInfo>();
+
+        Date selectedStartDate = (Date) startDateSpinner.getValue();
+        Date selectedEndDate = (Date) endDateSpinner.getValue();
+
+        java.sql.Date sqlStartDate = new java.sql.Date(selectedStartDate.getTime());
+        java.sql.Date sqlEndDate = new java.sql.Date(selectedEndDate.getTime());
+
+        ArrayList<AppointmentInfo> appointmentInfoList = new ArrayList<>();
+
+        for (AppointmentInfo i : handler.getDoctorsAvailableOnXYDay(sqlStartDate, sqlEndDate)) {
+            appointmentInfoList.add(i);
+            currentAppointmentInfo.add(i);
+        }
+
+        displayAppointments(appointmentInfoList);
+        cancelButton.setVisible(false);
     }
 
     private void searchForDateTime() {
+        lastAction = "time";
+        currentAppointmentInfo = new ArrayList<AppointmentInfo>();
+
         String selectedExpertise = (String) expertiseComboBox.getSelectedItem();
         Date selectedStartDate = (Date) startDateSpinner.getValue();
         Date selectedEndDate = (Date) endDateSpinner.getValue();
@@ -236,49 +208,81 @@ public class DetailedWindowPatient {
         java.sql.Date sqlStartDate = new java.sql.Date(selectedStartDate.getTime());
         java.sql.Date sqlEndDate = new java.sql.Date(selectedEndDate.getTime());
 
-        String formattedStartDate = new SimpleDateFormat("dd-MMM-yyyy").format(selectedStartDate);
-        String formattedEndDate = new SimpleDateFormat("dd-MMM-yyyy").format(selectedEndDate);
         String selectedStartTime = startTimeField.getText();
         String selectedEndTime = endTimeField.getText();
 
         try {
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-
-            // Convert selectedStartTime and selectedEndTime to java.util.Date
             Date parsedStartTime = timeFormat.parse(selectedStartTime);
             Date parsedEndTime = timeFormat.parse(selectedEndTime);
 
-            // Convert to java.sql.Time
             java.sql.Time sqlStartTime = new java.sql.Time(parsedStartTime.getTime());
             java.sql.Time sqlEndTime = new java.sql.Time(parsedEndTime.getTime());
 
-            // Create a list to store the AppointmentInfo objects
             ArrayList<AppointmentInfo> appointmentInfoList = new ArrayList<>();
 
-            for (AppointmentInfo i : handler.getDoctorsAvailableBetweenTime(
-                    sqlStartDate,
-                    sqlEndDate,
-                    sqlStartTime,
-                    sqlEndTime
-            )) {
-                // Add each AppointmentInfo object to the list
+            for (AppointmentInfo i : handler.getDoctorsAvailableBetweenTime(sqlStartDate, sqlEndDate, sqlStartTime, sqlEndTime)) {
                 appointmentInfoList.add(i);
+                currentAppointmentInfo.add(i);
             }
 
-            // Create a list to store the getInfoText strings
-            ArrayList<String> displayList = new ArrayList<>();
-
-            // Extract getInfoText strings from AppointmentInfo objects
-            for (AppointmentInfo appointmentInfo : appointmentInfoList) {
-                displayList.add(appointmentInfo.getInfoText());
-            }
-
-            // Set the list data to the JList
-            arrayListDisplay.setListData(displayList.toArray(new String[0]));
+            displayAppointments(appointmentInfoList);
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        cancelButton.setVisible(false);
+    }
+
+    private void listAppointments() {
+        ArrayList<AppointmentInfo> appointmentInfoList = handler.getPatientAppointments(userID);
+        currentAppointmentInfo = appointmentInfoList;
+        displayAppointments(appointmentInfoList);
+        cancelButton.setVisible(true);
+    }
+
+    private void makeAppointment() {
+            AppointmentInfo data = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex());
+            try{
+                handler.makeAppointment(this.userID,data.doctorID,data.slotID);
+                if(lastAction.equals("expertise")){
+                    searchByExpertise();
+                }
+                if(lastAction.equals("day")){
+                    searchForDate();
+                }
+                if(lastAction.equals("time")){
+                    searchForDateTime();
+                }
+            }
+            catch (Exception e){
+                System.out.println("could not make :(");
+            }
+        cancelButton.setVisible(false);
+    }
+
+    private void cancelAppointment() {
+        if (arrayListDisplay.getSelectedIndex() != -1) {
+            AppointmentInfo data = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex());
+            try {
+                handler.cancelAppointment(data.appointmentID);
+            }
+            catch (Exception e){
+                System.out.println("could not make :(");
+            }
+        }
+        listAppointments();
+    }
+
+
+    private void displayAppointments(ArrayList<AppointmentInfo> appointmentInfoList) {
+        ArrayList<String> displayList = new ArrayList<>();
+
+        for (AppointmentInfo appointmentInfo : appointmentInfoList) {
+            displayList.add(appointmentInfo.getInfoText());
+        }
+
+        arrayListDisplay.setListData(displayList.toArray(new String[0]));
     }
 
     private void updateExpertiseComboBox() {
@@ -294,4 +298,7 @@ public class DetailedWindowPatient {
             e.printStackTrace();
         }
     }
+
+
+
 }

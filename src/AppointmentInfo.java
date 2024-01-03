@@ -4,6 +4,7 @@ public class AppointmentInfo {
     java.sql.Time startTime;
     java.sql.Time endTime;
     java.sql.Date day;
+    int appointmentID;
 
     boolean available;
 

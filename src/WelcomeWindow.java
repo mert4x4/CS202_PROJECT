@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
+
 public class WelcomeWindow {
     JFrame window;
     JButton loginButton;
@@ -10,6 +12,8 @@ public class WelcomeWindow {
     JPasswordField passwordField;
     JLabel usernameLabel;
     JLabel passwordLabel;
+
+
 
     public void createWindow() {
         window = new JFrame();
