@@ -69,6 +69,7 @@ public class WelcomeWindow {
                 DataHandler handler = new DataHandler();
                 try {
                     handler.register(usernameField.getText(),passwordField.getText(),"Patient"); //paswordları hashlemeyi unutmayak
+
                     int userId = handler.login(usernameField.getText(), passwordField.getText());
                     System.out.println(userId);
                     window.dispose();

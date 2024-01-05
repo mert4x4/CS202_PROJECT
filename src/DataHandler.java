@@ -19,30 +19,66 @@ public class DataHandler {
         return getUserId(username);
     }
 
-    public int register(String username, String password, String userType) throws Exception {
+    public int register_user(String username, String password, String userType) throws Exception {
         DBConnection dbConnection = new DBConnection();
         Connection c = dbConnection.getConnection();
 
         int newUserId = getMaxUserId(c) + 1;
 
+        if(!isUsernameExists(username)){
+            String insertSql = "INSERT INTO User_ (userID, password, name, user_type) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement insertPstmt = c.prepareStatement(insertSql)) {
+                insertPstmt.setInt(1, newUserId);
+                insertPstmt.setString(2, password);
+                insertPstmt.setString(3, username);
+                insertPstmt.setString(4, userType);
 
-        String insertSql = "INSERT INTO User_ (userID, password, name, user_type) VALUES (?, ?, ?, ?)";
+                int affectedRows = insertPstmt.executeUpdate();
+
+                if (affectedRows == 0) {
+                    throw new SQLException("Creating user failed, no rows affected.");
+                }
+
+                return newUserId; // Return the generated user ID
+            } catch (SQLException e) {
+                throw new Exception("Error registering user: " + e.getMessage());
+            }
+        }
+        else{
+            throw new Exception("this username already exists");
+        }
+    }
+
+    public int register_patient(int userID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection c = dbConnection.getConnection();
+
+        String insertSql = "INSERT INTO Patient (patientID, dob) VALUES (?,null)";
         try (PreparedStatement insertPstmt = c.prepareStatement(insertSql)) {
-            insertPstmt.setInt(1, newUserId);
-            insertPstmt.setString(2, password);
-            insertPstmt.setString(3, username);
-            insertPstmt.setString(4, userType);
-
+            insertPstmt.setInt(1, userID);
             int affectedRows = insertPstmt.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new SQLException("Creating user failed, no rows affected.");
+                throw new SQLException("Creating patient failed, no rows affected.");
             }
 
-            return newUserId; // Return the generated user ID
+            return userID; // Return the generated user ID
         } catch (SQLException e) {
-            throw new Exception("Error registering user: " + e.getMessage());
+            throw new Exception("Error registering patient: " + e.getMessage());
         }
+    }
+
+
+    public int register(String username, String password, String userType) throws Exception {
+        try{
+            int id = register_user(username,password,userType);
+            register_patient(id);
+            return id;
+        }
+        catch (SQLException e){
+            throw new Exception("Error registering patient: " + e.getMessage());
+        }
+
     }
 
     private int getMaxUserId(Connection c) throws SQLException {
