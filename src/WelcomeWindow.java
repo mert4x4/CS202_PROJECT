@@ -52,6 +52,11 @@ public class WelcomeWindow {
                         DetailedWindowPatient detailedWindowPatient = new DetailedWindowPatient();
                         detailedWindowPatient.createWindow(userId);
                     }
+                    if(handler.getUserTypeFromId(userId).equals("Doctor")){
+                        DetailedWindowDoctor detailedWindowDoctor = new DetailedWindowDoctor();
+                        detailedWindowDoctor.createWindow(userId);
+                    }
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(window, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
                 }
