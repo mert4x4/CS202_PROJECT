@@ -387,7 +387,130 @@ public class DataHandler {
         }
     }
 
+    public ArrayList<AppointmentInfo> getDoctorAppointments(int doctorID) {
+        ArrayList<AppointmentInfo> appointments = new ArrayList<>();
 
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "CALL get_appointment_by_doctorID(?)";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, doctorID);
+
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    AppointmentInfo appointment = new AppointmentInfo();
+                    appointment.doctorID = resultSet.getInt("doctorID");
+                    appointment.slotID = resultSet.getInt("slotID");
+                    appointment.startTime = resultSet.getTime("start_time");
+                    appointment.endTime = resultSet.getTime("end_time");
+                    appointment.day = resultSet.getDate("slot_day");
+                    appointment.available = resultSet.getBoolean("available");
+                    appointment.appointmentID = resultSet.getInt("appointmentID");
+                    appointment.doctorName = resultSet.getString("doctor_name");
+                    appointment.patientName = resultSet.getString("patient_name");
+
+                    appointments.add(appointment);
+                    System.out.println(appointment.getInfoText());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return appointments;
+    }
+
+
+    public ArrayList<RoomInfo> getAvailableRoomsByTimeslot(int slotID) {
+        ArrayList<RoomInfo> roomInfos = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "CALL get_available_rooms_for_timeslot(?)";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, slotID);
+
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    RoomInfo roomInfo = new RoomInfo();
+                    roomInfo.roomID = resultSet.getInt("roomID");
+                    roomInfo.roomName = resultSet.getString("room_type");
+
+                    roomInfos.add(roomInfo);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return roomInfos;
+    }
+    public ArrayList<NurseInfo> getAvailableNursesByTimeslot(int slotID) {
+        ArrayList<NurseInfo> NurseInfos = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "CALL get_available_nurses_for_timeslot(?)";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, slotID);
+
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    NurseInfo nurseInfo = new NurseInfo();
+                    nurseInfo.nurseID = resultSet.getInt("nurseID");
+                    nurseInfo.nurseName = resultSet.getString("nurse_name");
+
+                    NurseInfos.add(nurseInfo);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return NurseInfos;
+    }
+
+
+    public void assignNurseAndRoom(int appointmentID, Integer nurseID, Integer roomID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            // Use a CallableStatement to call the stored procedure
+            String sql = "{CALL AssignNurseAndRoom(?, ?, ?)}";
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, appointmentID);
+                if (roomID != null) {
+                    callableStatement.setInt(2, nurseID);
+                }
+                if (nurseID != null) {
+                    callableStatement.setInt(3, roomID);
+                }
+                callableStatement.execute();
+            } catch (SQLException e) {
+                // Handle SQL exceptions
+                throw new Exception("Error assigning nurse and room: " + e.getMessage());
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 
 

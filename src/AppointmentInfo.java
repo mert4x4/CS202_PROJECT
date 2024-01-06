@@ -8,10 +8,13 @@ public class AppointmentInfo {
 
     boolean available;
 
+    String doctorName;
+    String patientName;
+
 
 
     public String getInfoText(){
-        return (doctorID + " " + slotID + " " + day + " " + startTime + " " + endTime + " " + available);
+        return (doctorID+" Doctor name: "+ doctorName + "Patient Name: "+ patientName + " " + slotID + " " + day + " " + startTime + " " + endTime + " " + available);
     }
 
 }
