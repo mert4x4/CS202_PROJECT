@@ -87,6 +87,23 @@ public class DataHandler {
         }
     }
 
+    public int registerNurseAndMakeAvailable(int nurseID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection c = dbConnection.getConnection();
+
+        // Using a CallableStatement for calling the stored procedure
+        String callProcedure = "{ CALL insert_nurse_and_make_available(?) }";
+
+        try (CallableStatement callableStmt = c.prepareCall(callProcedure)) {
+            callableStmt.setInt(1, nurseID);
+
+            // Execute the stored procedure
+            callableStmt.execute();
+            return nurseID;
+        } catch (SQLException e) {
+            throw new Exception("error in sql side: " + e.getMessage());
+        }
+    }
 
 
     public int register(String username, String password, String userType) throws Exception {
@@ -222,6 +239,7 @@ public class DataHandler {
                     appointment.endTime = resultSet.getTime("end_time");
                     appointment.day = resultSet.getDate("slot_day");
                     appointment.available = resultSet.getBoolean("available");
+                    appointment.doctorName = getDoctorNameByDoctorId(appointment.doctorID);
 
 
                     appointments.add(appointment);
@@ -257,6 +275,7 @@ public class DataHandler {
                     appointment.endTime = resultSet.getTime("end_time");
                     appointment.day = resultSet.getDate("slot_day");
                     appointment.available = resultSet.getBoolean("available");
+                    appointment.doctorName = getDoctorNameByDoctorId(appointment.doctorID);
 
 
                     appointments.add(appointment);
@@ -301,6 +320,7 @@ public class DataHandler {
                     appointment.endTime = resultSet.getTime("end_time");
                     appointment.day = resultSet.getDate("slot_day");
                     appointment.available = resultSet.getBoolean("available");
+                    appointment.doctorName = getDoctorNameByDoctorId(appointment.doctorID);
 
 
                     appointments.add(appointment);
@@ -343,6 +363,7 @@ public class DataHandler {
                     appointment.day = resultSet.getDate("slot_day");
                     appointment.available = resultSet.getBoolean("available");
                     appointment.appointmentID = resultSet.getInt("appointmentID");
+                    appointment.doctorName = getDoctorNameByDoctorId(appointment.doctorID);
 
                     appointments.add(appointment);
                 }
@@ -661,7 +682,118 @@ public class DataHandler {
         return roomInfos;
     }
 
+    public String getDoctorNameByDoctorId(int doctorID) {
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
 
+        String doctorName = null;
+
+        if (connection != null) {
+            String sql = "SELECT name FROM User_ WHERE userID = ? AND user_type = 'Doctor'";
+
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, doctorID);
+
+                ResultSet resultSet = pstmt.executeQuery();
+
+                if (resultSet.next()) {
+                    doctorName = resultSet.getString("name");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Error " + e.getMessage());
+            }
+        }
+        return doctorName;
+    }
+
+
+
+    public ArrayList<String> getPatientStatsByDept() {
+        ArrayList<String> resultList = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "SELECT department, numPatients FROM PatientStatsByDept";
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String departmentName = resultSet.getString("department");
+                    int numPatients = resultSet.getInt("numPatients");
+                    String statResult = "department_name: " + departmentName + ", number_of_patients: " + numPatients;
+                    resultList.add(statResult);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return resultList;
+    }
+
+    public ArrayList<String> getRoomBookingRatioByDepartment() {
+        ArrayList<String> resultList = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "SELECT department, numAppointments, numAppointmentsWithRooms, roomBookingRatio FROM DepartmentRoomBookingRatio";
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    String departmentName = resultSet.getString("department");
+                    int numAppointments = resultSet.getInt("numAppointments");
+                    int numAppointmentsWithRooms = resultSet.getInt("numAppointmentsWithRooms");
+                    double roomBookingRatio = resultSet.getDouble("roomBookingRatio");
+
+                    String statResult = "department_name: " + departmentName +
+                            ", num_appointments: " + numAppointments +
+                            ", num_appointments_with_rooms: " + numAppointmentsWithRooms +
+                            ", room_booking_ratio: " + roomBookingRatio;
+
+                    resultList.add(statResult);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return resultList;
+    }
+
+    public ArrayList<String> getDepartmentNurseRoomRatio() {
+        ArrayList<String> resultList = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "SELECT department, numAppointments, numAssignedNurses, nurseToRoomRatio FROM DepartmentNurseRoomRatio";
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String departmentName = resultSet.getString("department");
+                    int numAppointments = resultSet.getInt("numAppointments");
+                    int numAssignedNurses = resultSet.getInt("numAssignedNurses");
+                    double nurseToRoomRatio = resultSet.getDouble("nurseToRoomRatio");
+
+                    String statResult = "department_name: " + departmentName +
+                            ", num_appointments: " + numAppointments +
+                            ", num_assigned_nurses: " + numAssignedNurses +
+                            ", nurse_to_room_ratio: " + nurseToRoomRatio;
+
+                    resultList.add(statResult);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return resultList;
+    }
 
 
 

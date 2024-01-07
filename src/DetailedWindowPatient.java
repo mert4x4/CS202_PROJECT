@@ -281,7 +281,7 @@ public class DetailedWindowPatient {
         ArrayList<String> displayList = new ArrayList<>();
 
         for (AppointmentInfo appointmentInfo : appointmentInfoList) {
-            displayList.add(appointmentInfo.getInfoText());
+            displayList.add(appointmentInfo.getInfoTextPatient());
         }
 
         arrayListDisplay.setListData(displayList.toArray(new String[0]));

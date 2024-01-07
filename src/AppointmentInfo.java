@@ -15,6 +15,10 @@ public class AppointmentInfo {
         return (doctorID+" Doctor name: "+ doctorName + "Patient Name: "+ patientName + " " + slotID + " " + day + " " + startTime + " " + endTime + " " + available);
     }
 
+    public String getInfoTextPatient(){
+        return ("Doctor name: "+ doctorName + "Slot ID: " + slotID + " dat: " + day + " start_time: " + startTime + " end_time" + endTime + " available: " + available);
+    }
+
     public String getAvailabilityText(){
         return (doctorID+" Doctor name: "+ doctorName + " slotID" + slotID + " day: " + day + " start: " + startTime + " end: " + endTime + " available: " + available);
     }

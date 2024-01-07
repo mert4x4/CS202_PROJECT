@@ -81,13 +81,19 @@ public class WelcomeWindow {
             public void actionPerformed(ActionEvent e) {
                 DataHandler handler = new DataHandler();
                 try {
-                    handler.register(usernameField.getText(),passwordField.getText(),"Patient"); //paswordları hashlemeyi unutmayak
+                    if (!(usernameField.getText().trim().isEmpty() || passwordField.getText().trim().isEmpty())) {
+                        handler.register(usernameField.getText(),passwordField.getText(),"Patient"); //paswordları hashlemeyi unutmayak
 
-                    int userId = handler.login(usernameField.getText(), passwordField.getText());
-                    System.out.println(userId);
-                    window.dispose();
-                    DetailedWindowPatient detailedWindowPatient = new DetailedWindowPatient();
-                    detailedWindowPatient.createWindow(userId);
+                        int userId = handler.login(usernameField.getText(), passwordField.getText());
+                        System.out.println(userId);
+                        window.dispose();
+                        DetailedWindowPatient detailedWindowPatient = new DetailedWindowPatient();
+                        detailedWindowPatient.createWindow(userId);
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(window, "username or password cannot be empty!", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(window, ex.getMessage(), "Register Error", JOptionPane.ERROR_MESSAGE);
                 }
