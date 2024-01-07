@@ -257,6 +257,7 @@ public class DetailedWindowPatient {
             }
             catch (Exception e){
                 System.out.println("could not make :(");
+                JOptionPane.showMessageDialog(window, "Error: " + "doctor is not available", "Error", JOptionPane.ERROR_MESSAGE);
             }
         cancelButton.setVisible(false);
     }
@@ -269,6 +270,7 @@ public class DetailedWindowPatient {
             }
             catch (Exception e){
                 System.out.println("could not make :(");
+                JOptionPane.showMessageDialog(window, "Error: " + "appointment cannot be canceled", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
         listAppointments();

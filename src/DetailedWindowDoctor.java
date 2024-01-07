@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class DetailedWindowDoctor {
+    private String currentMode = "none"; // listRooms, listAppointments, listAvailability, none
+
     private JFrame window;
     private JLabel infoLabel;
     private int userID;
@@ -15,8 +17,12 @@ public class DetailedWindowDoctor {
     private JList<String> arrayListDisplay;
     private JButton buttonListAppointments;
     private JButton buttonAssign;
+    private JButton buttonListRooms;
     private JComboBox<String> comboBoxAvailableRooms;
     private JComboBox<String> comboBoxAvailableNurses;
+    private JButton buttonListAvailability;
+    private JButton buttonSetAvailabilityTrue;
+    private JButton buttonSetAvailabilityFalse;
     private ArrayList<AppointmentInfo> currentAppointmentInfo;
 
     public DetailedWindowDoctor() {
@@ -27,7 +33,7 @@ public class DetailedWindowDoctor {
         this.userID = userID;
 
         window = new JFrame();
-        window.setSize(800, 500);
+        window.setSize(900, 500);
         window.setLayout(null);
 
         try {
@@ -38,56 +44,75 @@ public class DetailedWindowDoctor {
         infoLabel.setBounds(50, 30, 800, 30);
 
         arrayListDisplay = new JList<>();
-        arrayListDisplay.setBounds(50, 100, 660, 300);
-        arrayListDisplay.setVisible(true);
+        JScrollPane scrollPane = new JScrollPane(arrayListDisplay);
+        scrollPane.setBounds(50, 100, 660, 300);
 
         buttonListAppointments = new JButton("List Appointments");
         buttonListAppointments.setBounds(50, 80, 150, 20);
-        buttonListAppointments.setVisible(true);
         buttonListAppointments.addActionListener(e -> listDoctorAppointments());
 
         buttonAssign = new JButton("Assign");
-        buttonAssign.setBounds(600, 80, 150, 20);
-        buttonAssign.setVisible(true);
+        buttonAssign.setBounds(750, 100, 100, 30);
         buttonAssign.addActionListener(e -> assignRoomAndNurse());
+
+        buttonListRooms = new JButton("List Rooms");
+        buttonListRooms.setBounds(215, 80, 150, 20);
+        buttonListRooms.addActionListener(e -> listRooms());
+
+        buttonListAvailability = new JButton("List Availability");
+        buttonListAvailability.setBounds(400, 80, 150, 20);
+        buttonListAvailability.addActionListener(e -> listAvailability());
 
         String[] roomOptions = {"Select a room"};
         comboBoxAvailableRooms = new JComboBox<>(roomOptions);
-        comboBoxAvailableRooms.setBounds(220, 80, 150, 30);
-        comboBoxAvailableRooms.setVisible(true);
+        comboBoxAvailableRooms.setBounds(750, 200, 100, 30);
 
         comboBoxAvailableNurses = new JComboBox<>(roomOptions);
-        comboBoxAvailableNurses.setBounds(380, 80, 150, 30);
-        comboBoxAvailableNurses.setVisible(true);
+        comboBoxAvailableNurses.setBounds(750, 250, 100, 30);
+
+        buttonSetAvailabilityTrue = new JButton("Set Availability True");
+        buttonSetAvailabilityTrue.setBounds(scrollPane.getX() + scrollPane.getWidth() + 10, 120, 180, 20);
+        buttonSetAvailabilityTrue.addActionListener(e -> setAvailability(true));
+
+        buttonSetAvailabilityFalse = new JButton("Set Availability False");
+        buttonSetAvailabilityFalse.setBounds(scrollPane.getX() + scrollPane.getWidth() + 10, 150, 180, 20);
+        buttonSetAvailabilityFalse.addActionListener(e -> setAvailability(false));
 
         arrayListDisplay.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    handleListSelection();
+                    if (currentMode.equals("listAppointments"))
+                        handleListSelection();
                 }
             }
         });
 
-
-
         window.add(buttonAssign);
         window.add(infoLabel);
-        window.add(arrayListDisplay);
+        window.add(scrollPane);
         window.add(buttonListAppointments);
         window.add(comboBoxAvailableRooms);
         window.add(comboBoxAvailableNurses);
+        window.add(buttonListRooms);
+        window.add(buttonListAvailability);
+        window.add(buttonSetAvailabilityTrue);
+        window.add(buttonSetAvailabilityFalse);
 
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        for(RoomInfo i : handler.getAllRoomAvailabilityDetails()){
-            System.out.println(i.getDetailedRoomInfo());
-        }
-
+        updateButtonVisibility();
+    }
+    private void listRooms() {
+        currentMode = "listRooms";
+        updateButtonVisibility();
+        displayRooms(handler.getAllRoomAvailabilityDetails());
     }
 
     private void listDoctorAppointments() {
+        currentMode = "listAppointments";
+        updateButtonVisibility();
         currentAppointmentInfo = handler.getDoctorAppointments(userID);
         displayAppointments(currentAppointmentInfo);
     }
@@ -97,8 +122,18 @@ public class DetailedWindowDoctor {
 
         for (AppointmentInfo appointmentInfo : appointmentInfoList) {
             displayList.add(appointmentInfo.getInfoText());
+            System.out.println(appointmentInfo.getInfoText());
         }
 
+        arrayListDisplay.setListData(displayList.toArray(new String[0]));
+    }
+
+    private void displayRooms(ArrayList<RoomInfo> roomInfoList) {
+        ArrayList<String> displayList = new ArrayList<>();
+
+        for (RoomInfo roomInfo : roomInfoList) {
+            displayList.add(roomInfo.getDetailedRoomInfo());
+        }
         arrayListDisplay.setListData(displayList.toArray(new String[0]));
     }
 
@@ -137,32 +172,95 @@ public class DetailedWindowDoctor {
         }
     }
 
-    private void assignRoomAndNurse(){
+    private void assignRoomAndNurse() {
+        try {
+            Integer nurseID = handler.getAvailableNursesByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
+                    .get(comboBoxAvailableNurses.getSelectedIndex()).nurseID;
 
-            try{
-                Integer nurseID = handler.getAvailableNursesByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
-                        .get(comboBoxAvailableNurses.getSelectedIndex()).nurseID;
+            Integer roomID = handler.getAvailableRoomsByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
+                    .get(comboBoxAvailableRooms.getSelectedIndex()).roomID;
+            System.out.println(roomID);
+            System.out.println(nurseID);
+            try {
+                int appointmentID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).appointmentID;
+                int slotID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID;
+                handler.assignNurseAndRoom(appointmentID, nurseID, roomID);
 
-                Integer roomID = handler.getAvailableRoomsByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
-                        .get(comboBoxAvailableRooms.getSelectedIndex()).roomID;
-                System.out.println(roomID);System.out.println(nurseID);
-                try{
-                    int appointmentID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).appointmentID;
-                    int slotID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID;
-                    handler.assignNurseAndRoom(appointmentID, nurseID, roomID);
-
-                    updateAvailableRooms(slotID);
-                    updateAvailableNurses(slotID);
-                }
-                catch (Exception e){
-                    JOptionPane.showMessageDialog(window, "Error: " + "nurse and room is already assigned...", "Error", JOptionPane.ERROR_MESSAGE);
-                    //throw new RuntimeException("could not insert! :(((");
-                }
+                updateAvailableRooms(slotID);
+                updateAvailableNurses(slotID);
+                JOptionPane.showMessageDialog(window, "roomID: " + roomID + "nurseID: " + nurseID,  "Assigned!", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(window, "Error: " + "nurse and room is already assigned...", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            catch (Exception e){
-                JOptionPane.showMessageDialog(window, "Error: " + "there must be both nurse and room to assign", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(window, "Error: " + "there must be both nurse and room to assign", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
+    private void displayAvailability(ArrayList<AppointmentInfo> appointmentInfoList) {
+        ArrayList<String> displayList = new ArrayList<>();
+
+        for (AppointmentInfo appointmentInfo : appointmentInfoList) {
+            displayList.add(appointmentInfo.getAvailabilityText());
+        }
+
+        arrayListDisplay.setListData(displayList.toArray(new String[0]));
+    }
+
+
+    private void listAvailability() {
+        currentMode = "listAvailability";
+        updateButtonVisibility();
+        displayAvailability(handler.getDoctorAvailability(userID));
+        currentAppointmentInfo = handler.getDoctorAvailability(userID);
+    }
+
+    private void setAvailability(boolean isAvailable) {
+
+        if (arrayListDisplay.getSelectedIndex() != -1) {
+            AppointmentInfo data = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex());
+            try {
+                handler.setAvailabilityByDoctorIdAndSlotId(userID, data.slotID, isAvailable);
+            }
+            catch (Exception e){
+                JOptionPane.showMessageDialog(window, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        listAvailability();
+    }
+
+
+    public void updateButtonVisibility(){
+        if(currentMode.equals("listRooms")){
+            comboBoxAvailableRooms.setVisible(false);
+            comboBoxAvailableNurses.setVisible(false);
+            buttonAssign.setVisible(false);
+            buttonSetAvailabilityTrue.setVisible(false);
+            buttonSetAvailabilityFalse.setVisible(false);
+        }
+        if(currentMode.equals("listAppointments")){
+            buttonListAppointments.setVisible(true);
+            comboBoxAvailableRooms.setVisible(true);
+            comboBoxAvailableNurses.setVisible(true);
+            buttonAssign.setVisible(true);
+            buttonSetAvailabilityTrue.setVisible(false);
+            buttonSetAvailabilityFalse.setVisible(false);
+        }
+        if(currentMode.equals("listAvailability")){
+            comboBoxAvailableRooms.setVisible(false);
+            comboBoxAvailableNurses.setVisible(false);
+            buttonAssign.setVisible(false);
+            buttonSetAvailabilityTrue.setVisible(true);
+            buttonSetAvailabilityFalse.setVisible(true);
+        }
+        if(currentMode.equals("none")){
+            buttonAssign.setVisible(false);
+            buttonSetAvailabilityTrue.setVisible(false);
+            buttonSetAvailabilityFalse.setVisible(false);
+            comboBoxAvailableRooms.setVisible(false);
+            comboBoxAvailableNurses.setVisible(false);
+        }
+
+    }
 
 }

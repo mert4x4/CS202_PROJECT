@@ -549,6 +549,100 @@ public class DataHandler {
         return roomInfos;
     }
 
+    public void setAvailabilityByDoctorIdAndSlotId(int doctorID, int slotID, boolean trueOrFalse) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            // Use a CallableStatement to call the stored procedure
+            String sql = "{CALL set_doctor_availability_if_no_appointment(?, ?, ?)}";
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, doctorID);
+                callableStatement.setInt(2, slotID);
+                callableStatement.setBoolean(3, trueOrFalse);
+
+                callableStatement.execute();
+            } catch (SQLException e) {
+                // Handle SQL exceptions
+                throw new Exception("Error: " + e.getMessage());
+            }
+        }
+    }
+
+
+    public ArrayList<AppointmentInfo> getDoctorAvailability(int doctorID) {
+        ArrayList<AppointmentInfo> appointments = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "CALL get_doctor_availability_by_id(?)";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, doctorID);
+
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    AppointmentInfo appointment = new AppointmentInfo();
+                    appointment.doctorID = resultSet.getInt("doctorID");
+                    appointment.slotID = resultSet.getInt("slotID");
+                    appointment.startTime = resultSet.getTime("start_time");
+                    appointment.endTime = resultSet.getTime("end_time");
+                    appointment.day = resultSet.getDate("slot_day");
+                    appointment.available = resultSet.getBoolean("available");
+                    appointment.doctorName = resultSet.getString("doctor_name");
+                    appointments.add(appointment);
+                    System.out.println(appointment.getInfoText());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return appointments;
+    }
+    public ArrayList<RoomInfo> getAssignedRoomsOfNurse(int nurseID) {
+        ArrayList<RoomInfo> roomInfos = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "{CALL get_assigned_rooms_nurse(?)}";
+
+            try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+                callableStatement.setInt(1, nurseID);
+                ResultSet resultSet = callableStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    RoomInfo roomInfo = new RoomInfo();
+                    roomInfo.roomID = resultSet.getInt("roomID");
+                    roomInfo.roomType = resultSet.getString("room_type");
+                    roomInfo.slotID = resultSet.getInt("slotID");
+                    roomInfo.slot_day = resultSet.getDate("slot_day");
+                    roomInfo.start_time = resultSet.getTime("start_time");
+                    roomInfo.end_time = resultSet.getTime("end_time");
+                    roomInfo.available = resultSet.getBoolean("available");
+                    roomInfos.add(roomInfo);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return roomInfos;
+    }
+
+
+
 
 
 }

@@ -6,6 +6,9 @@ public class RoomInfo {
     public java.sql.Time start_time;
     public java.sql.Time end_time;
     Integer slotID;
+    Integer nurseID;
+    String nurseName;
+
     @Override
     public String toString() {
         return roomID + " " + roomType;

@@ -11,10 +11,12 @@ public class AppointmentInfo {
     String doctorName;
     String patientName;
 
-
-
     public String getInfoText(){
         return (doctorID+" Doctor name: "+ doctorName + "Patient Name: "+ patientName + " " + slotID + " " + day + " " + startTime + " " + endTime + " " + available);
+    }
+
+    public String getAvailabilityText(){
+        return (doctorID+" Doctor name: "+ doctorName + " slotID" + slotID + " day: " + day + " start: " + startTime + " end: " + endTime + " available: " + available);
     }
 
 }
