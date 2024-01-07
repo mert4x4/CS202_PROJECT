@@ -60,6 +60,10 @@ public class WelcomeWindow {
                         NurseWindow nurseWindow = new NurseWindow();
                         nurseWindow.createWindow(userId);
                     }
+                    if(handler.getUserTypeFromId(userId).equals("Manager")){
+                        DetailedWindowAdmin detailedWindowAdmin = new DetailedWindowAdmin();
+                        detailedWindowAdmin.createWindow(userId);
+                    }
 
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(window, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);

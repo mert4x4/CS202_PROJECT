@@ -68,6 +68,26 @@ public class DataHandler {
         }
     }
 
+    public int registerDoctorAndMakeAvailable(String department, int doctorID) throws Exception {
+        DBConnection dbConnection = new DBConnection();
+        Connection c = dbConnection.getConnection();
+
+        // Using a CallableStatement for calling the stored procedure
+        String callProcedure = "{ CALL insert_doctor_and_make_available(?, ?) }";
+
+        try (CallableStatement callableStmt = c.prepareCall(callProcedure)) {
+            callableStmt.setString(1, department);
+            callableStmt.setInt(2, doctorID);
+
+            // Execute the stored procedure
+            callableStmt.execute();
+            return doctorID;
+        } catch (SQLException e) {
+            throw new Exception("error in sql side: " + e.getMessage());
+        }
+    }
+
+
 
     public int register(String username, String password, String userType) throws Exception {
         try{
@@ -76,7 +96,7 @@ public class DataHandler {
             return id;
         }
         catch (SQLException e){
-            throw new Exception("Error registering patient: " + e.getMessage());
+            throw new Exception("Error registering: " + e.getMessage());
         }
 
     }
