@@ -80,6 +80,11 @@ public class DetailedWindowDoctor {
 
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        for(RoomInfo i : handler.getAllRoomAvailabilityDetails()){
+            System.out.println(i.getDetailedRoomInfo());
+        }
+
     }
 
     private void listDoctorAppointments() {
@@ -134,19 +139,28 @@ public class DetailedWindowDoctor {
 
     private void assignRoomAndNurse(){
 
-            Integer nurseID = handler.getAvailableNursesByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
-                    .get(comboBoxAvailableNurses.getSelectedIndex()).nurseID;
-
-            Integer roomID = handler.getAvailableRoomsByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
-                    .get(comboBoxAvailableRooms.getSelectedIndex()).roomID;
-
-            System.out.println(roomID);System.out.println(nurseID);
             try{
-                int appointmentID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).appointmentID;
-                handler.assignNurseAndRoom(appointmentID, nurseID, roomID);
+                Integer nurseID = handler.getAvailableNursesByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
+                        .get(comboBoxAvailableNurses.getSelectedIndex()).nurseID;
+
+                Integer roomID = handler.getAvailableRoomsByTimeslot(currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID)
+                        .get(comboBoxAvailableRooms.getSelectedIndex()).roomID;
+                System.out.println(roomID);System.out.println(nurseID);
+                try{
+                    int appointmentID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).appointmentID;
+                    int slotID = currentAppointmentInfo.get(arrayListDisplay.getSelectedIndex()).slotID;
+                    handler.assignNurseAndRoom(appointmentID, nurseID, roomID);
+
+                    updateAvailableRooms(slotID);
+                    updateAvailableNurses(slotID);
+                }
+                catch (Exception e){
+                    JOptionPane.showMessageDialog(window, "Error: " + "nurse and room is already assigned...", "Error", JOptionPane.ERROR_MESSAGE);
+                    //throw new RuntimeException("could not insert! :(((");
+                }
             }
             catch (Exception e){
-                throw new RuntimeException("could not inster! :(((((");
+                JOptionPane.showMessageDialog(window, "Error: " + "there must be both nurse and room to assign", "Error", JOptionPane.ERROR_MESSAGE);
             }
     }
 

@@ -442,7 +442,7 @@ public class DataHandler {
                 while (resultSet.next()) {
                     RoomInfo roomInfo = new RoomInfo();
                     roomInfo.roomID = resultSet.getInt("roomID");
-                    roomInfo.roomName = resultSet.getString("room_type");
+                    roomInfo.roomType = resultSet.getString("room_type");
 
                     roomInfos.add(roomInfo);
                 }
@@ -510,6 +510,43 @@ public class DataHandler {
                 }
             }
         }
+    }
+
+    public ArrayList<RoomInfo> getAllRoomAvailabilityDetails() {
+        ArrayList<RoomInfo> roomInfos = new ArrayList<>();
+
+        DBConnection dbConnection = new DBConnection();
+        Connection connection = dbConnection.getConnection();
+
+        if (connection != null) {
+            String sql = "SELECT * FROM room_availability_details";
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    RoomInfo roomInfo = new RoomInfo();
+                    roomInfo.roomID = resultSet.getInt("roomID");
+                    roomInfo.roomType = resultSet.getString("room_type");
+                    roomInfo.slotID = resultSet.getInt("slotID");
+                    roomInfo.slot_day = resultSet.getDate("slot_day");
+                    roomInfo.start_time = resultSet.getTime("start_time");
+                    roomInfo.end_time = resultSet.getTime("end_time");
+                    roomInfo.available = resultSet.getBoolean("available");
+                    roomInfos.add(roomInfo);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return roomInfos;
     }
 
 
