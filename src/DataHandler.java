@@ -1,5 +1,7 @@
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.random.RandomGenerator;
 
 
 public class DataHandler {
@@ -12,7 +14,7 @@ public class DataHandler {
             throw new Exception("Username does not exist");
         }
 
-        if(!isPasswordAndUsernameCorrect(username,password)){
+        if(!isPasswordAndUsernameCorrect(username,PasswordEncrypter.encrypt(password,getKey(username)))){
             throw new Exception("Password is incorrect");
         }
 
@@ -25,13 +27,17 @@ public class DataHandler {
 
         int newUserId = getMaxUserId(c) + 1;
 
-        if(!isUsernameExists(username)){
-            String insertSql = "INSERT INTO User_ (userID, password, name, user_type) VALUES (?, ?, ?, ?)";
+        if (!isUsernameExists(username)) {
+            int key = RandomGenerator.getDefault().nextInt(1,100);
+            String encryptedPassword = PasswordEncrypter.encrypt(password, key);
+
+            String insertSql = "INSERT INTO User_ (userID, password, name, user_type, user_key) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement insertPstmt = c.prepareStatement(insertSql)) {
                 insertPstmt.setInt(1, newUserId);
-                insertPstmt.setString(2, password);
+                insertPstmt.setString(2, encryptedPassword);
                 insertPstmt.setString(3, username);
                 insertPstmt.setString(4, userType);
+                insertPstmt.setInt(5, key);
 
                 int affectedRows = insertPstmt.executeUpdate();
 
@@ -43,11 +49,28 @@ public class DataHandler {
             } catch (SQLException e) {
                 throw new Exception("Error registering user: " + e.getMessage());
             }
-        }
-        else{
-            throw new Exception("this username already exists");
+        } else {
+            throw new Exception("This username already exists");
         }
     }
+
+    private int getKey(String username) {
+        DBConnection dbConnection = new DBConnection();
+        Connection c = dbConnection.getConnection();
+
+        String sql = "SELECT user_key FROM User_ WHERE name = ?";
+        try (PreparedStatement pstmt = c.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("user_key");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
 
     public int register_patient(int userID) throws Exception {
         DBConnection dbConnection = new DBConnection();
